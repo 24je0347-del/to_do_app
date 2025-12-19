@@ -1,87 +1,280 @@
-anymatch [![Build Status](https://travis-ci.org/micromatch/anymatch.svg?branch=master)](https://travis-ci.org/micromatch/anymatch) [![Coverage Status](https://img.shields.io/coveralls/micromatch/anymatch.svg?branch=master)](https://coveralls.io/r/micromatch/anymatch?branch=master)
-======
-Javascript module to match a string against a regular expression, glob, string,
-or function that takes the string as an argument and returns a truthy or falsy
-value. The matcher can also be an array of any or all of these. Useful for
-allowing a very flexible user-defined config to define things like file paths.
+# BSON parser
 
-__Note: This module has Bash-parity, please be aware that Windows-style backslashes are not supported as separators. See https://github.com/micromatch/micromatch#backslashes for more information.__
+BSON is short for "Binary JSON," and is the binary-encoded serialization of JSON-like documents.
+You can learn more about it in [the specification](http://bsonspec.org).
+
+### Table of Contents
+
+- [Usage](#usage)
+- [Bugs/Feature Requests](#bugs--feature-requests)
+- [Installation](#installation)
+- [Documentation](#documentation)
+- [FAQ](#faq)
 
 
-Usage
------
+### Release Integrity
+
+Releases are created automatically and signed using the [Node team's GPG key](https://pgp.mongodb.com/node-driver.asc). This applies to the git tag as well as all release packages provided as part of a GitHub release. To verify the provided packages, download the key and import it using gpg:
+
+```shell
+gpg --import node-driver.asc
+```
+
+The GitHub release contains a detached signature file for the NPM package (named
+`bson-X.Y.Z.tgz.sig`).
+
+The following command returns the link npm package. 
+```shell
+npm view bson@vX.Y.Z dist.tarball 
+```
+
+Using the result of the above command, a `curl` command can return the official npm package for the release.
+
+To verify the integrity of the downloaded package, run the following command:
+```shell
+gpg --verify bson-X.Y.Z.tgz.sig bson-X.Y.Z.tgz
+```
+
+>[!Note]
+No verification is done when using npm to install the package. The contents of the Github tarball and npm's tarball are identical.
+
+## Bugs / Feature Requests
+
+Think you've found a bug? Want to see a new feature in `bson`? Please open a case in our issue management tool, JIRA:
+
+1. Create an account and login: [jira.mongodb.org](https://jira.mongodb.org)
+2. Navigate to the NODE project: [jira.mongodb.org/browse/NODE](https://jira.mongodb.org/browse/NODE)
+3. Click **Create Issue** - Please provide as much information as possible about the issue and how to reproduce it.
+
+Bug reports in JIRA for the NODE driver project are **public**.
+
+## Usage
+
+To build a new version perform the following operations:
+
+```
+npm install
+npm run build
+```
+
+### Node.js or Bundling Usage
+
+When using a bundler or Node.js you can import bson using the package name:
+
+```js
+import { BSON, EJSON, ObjectId } from 'bson';
+// or:
+// const { BSON, EJSON, ObjectId } = require('bson');
+
+const bytes = BSON.serialize({ _id: new ObjectId() });
+console.log(bytes);
+const doc = BSON.deserialize(bytes);
+console.log(EJSON.stringify(doc));
+// {"_id":{"$oid":"..."}}
+```
+
+### Browser Usage
+
+If you are working directly in the browser without a bundler please use the `.mjs` bundle like so:
+
+```html
+<script type="module">
+  import { BSON, EJSON, ObjectId } from './lib/bson.mjs';
+
+  const bytes = BSON.serialize({ _id: new ObjectId() });
+  console.log(bytes);
+  const doc = BSON.deserialize(bytes);
+  console.log(EJSON.stringify(doc));
+  // {"_id":{"$oid":"..."}}
+</script>
+```
+
+## Installation
+
 ```sh
-npm install anymatch
+npm install bson
 ```
 
-#### anymatch(matchers, testString, [returnIndex], [options])
-* __matchers__: (_Array|String|RegExp|Function_)
-String to be directly matched, string with glob patterns, regular expression
-test, function that takes the testString as an argument and returns a truthy
-value if it should be matched, or an array of any number and mix of these types.
-* __testString__: (_String|Array_) The string to test against the matchers. If
-passed as an array, the first element of the array will be used as the
-`testString` for non-function matchers, while the entire array will be applied
-as the arguments for function matchers.
-* __options__: (_Object_ [optional]_) Any of the [picomatch](https://github.com/micromatch/picomatch#options) options.
-    * __returnIndex__: (_Boolean [optional]_) If true, return the array index of
-the first matcher that that testString matched, or -1 if no match, instead of a
-boolean result.
+### MongoDB Node.js Driver Version Compatibility
+
+Only the following version combinations with the [MongoDB Node.js Driver](https://github.com/mongodb/node-mongodb-native) are considered stable.
+
+|               | `bson@1.x` | `bson@4.x` | `bson@5.x` | `bson@6.x` |
+| ------------- | ---------- | ---------- | ---------- | ---------- |
+| `mongodb@6.x` | N/A        | N/A        | N/A        | ✓          |
+| `mongodb@5.x` | N/A        | N/A        | ✓          | N/A        |
+| `mongodb@4.x` | N/A        | ✓          | N/A        | N/A        |
+| `mongodb@3.x` | ✓          | N/A        | N/A        | N/A        |
+
+## Documentation
+
+### BSON
+
+[API documentation](https://mongodb.github.io/node-mongodb-native/Next/modules/BSON.html)
+
+<a name="EJSON"></a>
+
+### EJSON
+
+- [EJSON](#EJSON)
+
+  - [.parse(text, [options])](#EJSON.parse)
+
+  - [.stringify(value, [replacer], [space], [options])](#EJSON.stringify)
+
+  - [.serialize(bson, [options])](#EJSON.serialize)
+
+  - [.deserialize(ejson, [options])](#EJSON.deserialize)
+
+<a name="EJSON.parse"></a>
+
+#### _EJSON_.parse(text, [options])
+
+| Param             | Type                 | Default           | Description                                                                        |
+| ----------------- | -------------------- | ----------------- | ---------------------------------------------------------------------------------- |
+| text              | <code>string</code>  |                   |                                                                                    |
+| [options]         | <code>object</code>  |                   | Optional settings                                                                  |
+| [options.relaxed] | <code>boolean</code> | <code>true</code> | Attempt to return native JS types where possible, rather than BSON types (if true) |
+
+Parse an Extended JSON string, constructing the JavaScript value or object described by that
+string.
+
+**Example**
 
 ```js
-const anymatch = require('anymatch');
+const { EJSON } = require('bson');
+const text = '{ "int32": { "$numberInt": "10" } }';
 
-const matchers = [ 'path/to/file.js', 'path/anyjs/**/*.js', /foo.js$/, string => string.includes('bar') && string.length > 10 ] ;
+// prints { int32: { [String: '10'] _bsontype: 'Int32', value: '10' } }
+console.log(EJSON.parse(text, { relaxed: false }));
 
-anymatch(matchers, 'path/to/file.js'); // true
-anymatch(matchers, 'path/anyjs/baz.js'); // true
-anymatch(matchers, 'path/to/foo.js'); // true
-anymatch(matchers, 'path/to/bar.js'); // true
-anymatch(matchers, 'bar.js'); // false
-
-// returnIndex = true
-anymatch(matchers, 'foo.js', {returnIndex: true}); // 2
-anymatch(matchers, 'path/anyjs/foo.js', {returnIndex: true}); // 1
-
-// any picomatc
-
-// using globs to match directories and their children
-anymatch('node_modules', 'node_modules'); // true
-anymatch('node_modules', 'node_modules/somelib/index.js'); // false
-anymatch('node_modules/**', 'node_modules/somelib/index.js'); // true
-anymatch('node_modules/**', '/absolute/path/to/node_modules/somelib/index.js'); // false
-anymatch('**/node_modules/**', '/absolute/path/to/node_modules/somelib/index.js'); // true
-
-const matcher = anymatch(matchers);
-['foo.js', 'bar.js'].filter(matcher);  // [ 'foo.js' ]
-anymatch master* ❯
-
+// prints { int32: 10 }
+console.log(EJSON.parse(text));
 ```
 
-#### anymatch(matchers)
-You can also pass in only your matcher(s) to get a curried function that has
-already been bound to the provided matching criteria. This can be used as an
-`Array#filter` callback.
+<a name="EJSON.stringify"></a>
+
+#### _EJSON_.stringify(value, [replacer], [space], [options])
+
+| Param             | Type                                        | Default           | Description                                                                                                                                                                                                                                                                                                                                        |
+| ----------------- | ------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| value             | <code>object</code>                         |                   | The value to convert to extended JSON                                                                                                                                                                                                                                                                                                              |
+| [replacer]        | <code>function</code> \| <code>array</code> |                   | A function that alters the behavior of the stringification process, or an array of String and Number objects that serve as a whitelist for selecting/filtering the properties of the value object to be included in the JSON string. If this value is null or not provided, all properties of the object are included in the resulting JSON string |
+| [space]           | <code>string</code> \| <code>number</code>  |                   | A String or Number object that's used to insert white space into the output JSON string for readability purposes.                                                                                                                                                                                                                                  |
+| [options]         | <code>object</code>                         |                   | Optional settings                                                                                                                                                                                                                                                                                                                                  |
+| [options.relaxed] | <code>boolean</code>                        | <code>true</code> | Enabled Extended JSON's `relaxed` mode                                                                                                                                                                                                                                                                                                             |
+| [options.legacy]  | <code>boolean</code>                        | <code>true</code> | Output in Extended JSON v1                                                                                                                                                                                                                                                                                                                         |
+
+Converts a BSON document to an Extended JSON string, optionally replacing values if a replacer
+function is specified or optionally including only the specified properties if a replacer array
+is specified.
+
+**Example**
 
 ```js
-var matcher = anymatch(matchers);
+const { EJSON } = require('bson');
+const Int32 = require('mongodb').Int32;
+const doc = { int32: new Int32(10) };
 
-matcher('path/to/file.js'); // true
-matcher('path/anyjs/baz.js', true); // 1
+// prints '{"int32":{"$numberInt":"10"}}'
+console.log(EJSON.stringify(doc, { relaxed: false }));
 
-['foo.js', 'bar.js'].filter(matcher); // ['foo.js']
+// prints '{"int32":10}'
+console.log(EJSON.stringify(doc));
 ```
 
-Changelog
-----------
-[See release notes page on GitHub](https://github.com/micromatch/anymatch/releases)
+<a name="EJSON.serialize"></a>
 
-- **v3.0:** Removed `startIndex` and `endIndex` arguments. Node 8.x-only.
-- **v2.0:** [micromatch](https://github.com/jonschlinkert/micromatch) moves away from minimatch-parity and inline with Bash. This includes handling backslashes differently (see https://github.com/micromatch/micromatch#backslashes for more information).
-- **v1.2:** anymatch uses [micromatch](https://github.com/jonschlinkert/micromatch)
-for glob pattern matching. Issues with glob pattern matching should be
-reported directly to the [micromatch issue tracker](https://github.com/jonschlinkert/micromatch/issues).
+#### _EJSON_.serialize(bson, [options])
 
-License
--------
-[ISC](https://raw.github.com/micromatch/anymatch/master/LICENSE)
+| Param     | Type                | Description                                          |
+| --------- | ------------------- | ---------------------------------------------------- |
+| bson      | <code>object</code> | The object to serialize                              |
+| [options] | <code>object</code> | Optional settings passed to the `stringify` function |
+
+Serializes an object to an Extended JSON string, and reparse it as a JavaScript object.
+
+<a name="EJSON.deserialize"></a>
+
+#### _EJSON_.deserialize(ejson, [options])
+
+| Param     | Type                | Description                                  |
+| --------- | ------------------- | -------------------------------------------- |
+| ejson     | <code>object</code> | The Extended JSON object to deserialize      |
+| [options] | <code>object</code> | Optional settings passed to the parse method |
+
+Deserializes an Extended JSON object into a plain JavaScript object with native/BSON types
+
+## Error Handling
+
+It is our recommendation to use `BSONError.isBSONError()` checks on errors and to avoid relying on parsing `error.message` and `error.name` strings in your code. We guarantee `BSONError.isBSONError()` checks will pass according to semver guidelines, but errors may be sub-classed or their messages may change at any time, even patch releases, as we see fit to increase the helpfulness of the errors.
+
+Any new errors we add to the driver will directly extend an existing error class and no existing error will be moved to a different parent class outside of a major release.
+This means `BSONError.isBSONError()` will always be able to accurately capture the errors that our BSON library throws.
+
+Hypothetical example: A collection in our Db has an issue with UTF-8 data:
+
+```ts
+let documentCount = 0;
+const cursor = collection.find({}, { utf8Validation: true });
+try {
+  for await (const doc of cursor) documentCount += 1;
+} catch (error) {
+  if (BSONError.isBSONError(error)) {
+    console.log(`Found the troublemaker UTF-8!: ${documentCount} ${error.message}`);
+    return documentCount;
+  }
+  throw error;
+}
+```
+
+## React Native
+
+BSON vendors the required polyfills for `TextEncoder`, `TextDecoder`, `atob`, `btoa` imported from React Native and therefore doesn't expect users to polyfill these. One additional polyfill, `crypto.getRandomValues` is recommended and can be installed with the following command:
+
+```sh
+npm install --save react-native-get-random-values
+```
+
+The following snippet should be placed at the top of the entrypoint (by default this is the root `index.js` file) for React Native projects using the BSON library. These lines must be placed for any code that imports `BSON`.
+
+```typescript
+// Required Polyfills For ReactNative
+import 'react-native-get-random-values';
+```
+
+Finally, import the `BSON` library like so:
+
+```typescript
+import { BSON, EJSON } from 'bson';
+```
+
+This will cause React Native to import the `node_modules/bson/lib/bson.rn.cjs` bundle (see the `"react-native"` setting we have in the `"exports"` section of our [package.json](./package.json).)
+
+### Technical Note about React Native module import
+
+The `"exports"` definition in our `package.json` will result in BSON's CommonJS bundle being imported in a React Native project instead of the ES module bundle. Importing the CommonJS bundle is necessary because BSON's ES module bundle of BSON uses top-level await, which is not supported syntax in [React Native's runtime hermes](https://hermesengine.dev/).
+
+## FAQ
+
+#### Why does `undefined` get converted to `null`?
+
+The `undefined` BSON type has been [deprecated for many years](http://bsonspec.org/spec.html), so this library has dropped support for it. Use the `ignoreUndefined` option (for example, from the [driver](http://mongodb.github.io/node-mongodb-native/2.2/api/MongoClient.html#connect) ) to instead remove `undefined` keys.
+
+#### How do I add custom serialization logic?
+
+This library looks for `toBSON()` functions on every path, and calls the `toBSON()` function to get the value to serialize.
+
+```javascript
+const BSON = require('bson');
+
+class CustomSerialize {
+  toBSON() {
+    return 42;
+  }
+}
+
+const obj = { answer: new CustomSerialize() };
+// "{ answer: 42 }"
+console.log(BSON.deserialize(BSON.serialize(obj)));
+```
